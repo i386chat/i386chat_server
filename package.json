@@ -1,0 +1,25 @@
+{
+  "name": "i386chat_server",
+  "version": "1.0.0",
+  "description": "It's the server powering chat.i386.tech!",
+  "main": "server.js",
+  "dependencies": {
+    "express": "^4.17.1",
+    "socket.io": "^2.3.0",
+    "xss": "^1.0.7"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "chat",
+    "sockets",
+    "websockets",
+    "chatbox",
+    "web",
+    "chat"
+  ],
+  "author": "zer0char1sma, xFuney",
+  "license": "ISC"
+}

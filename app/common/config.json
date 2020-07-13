@@ -1,0 +1,11 @@
+{
+    "xssFilter": {
+        "whiteList": {
+            "strong": [],
+            "i": [],
+            "span": []
+        }
+    },
+    "rainbowCode": "",
+    "port": 3096
+}

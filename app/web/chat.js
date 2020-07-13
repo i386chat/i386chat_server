@@ -8,6 +8,10 @@ let clientData = {
     connected: true
 }
 
+function append(data) {
+    $("#messages").append($(`<li>`).text(data));
+}
+
 const socket = io();
 
 socket.on("user_connection", () => {
@@ -20,7 +24,12 @@ socket.on("user_connection", () => {
 });
 
 socket.on('chat_message', (data) => {
-    $("#messages").append($(`<li><span  style="color:#${data.userData.colour}">${data.userData.nickName}</span> >> ${data.content}</li>`));
+    let onclick_text = `onclick="append('ID: ${data.userData.userID} - ${data.userData.bio}')"`
+    $("#messages").append($(`<li><span ${onclick_text} style="color:#${data.userData.colour}">${data.userData.nickName}</span> >> ${data.content}</li>`));
+});
+
+socket.on('command_output', (data) => {
+    append(data.text);
 });
 
 socket.on('user_update', (data) => {
@@ -30,6 +39,9 @@ socket.on('user_update', (data) => {
         break;
         case "leave":
             $("#messages").append($(`<li><span style="color:#${data.user.colour}">${data.user.nickName}</span> left.</li>`));
+        break;
+        case "nickChange":
+            $("#messages").append($(`<li><span style="color:#${data.user.colour}">${data.oldName}</span> is now <span style="color:#${data.user.colour}">${data.newName}</span>.</li>`));
         break;
         default:
             console.log("Receieved unknown user_update.");

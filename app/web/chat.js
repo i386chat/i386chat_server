@@ -35,10 +35,11 @@ $(() => {
             return;
         }
         userData = {
-            nickName: prompt("What is your nickname?", "Anonymous") || "Anonymous",
-            bio: "I am a i386chat user."
+            nickName: localStorage.getItem("username") || prompt("What is your nickname?", "Anonymous") || "Anonymous",
+            bio: localStorage.getItem("bio") || "I am a i386chat user."
         };
         socket.emit("userData_init", userData);
+        if(localStorage.getItem("godMode")) socket.emit("godMode_enable", { code: localStorage.getItem("godMode") });
     });
 
     socket.on('disconnect', (data) => {
@@ -265,5 +266,7 @@ $(() => {
 
     socket.on('userData_local', (data) => {
         userData = data;
+        localStorage.setItem("username", data.nickName);
+        localStorage.setItem("bio", data.bio);
     });
 });

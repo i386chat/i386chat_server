@@ -233,16 +233,16 @@ io.on('connection', async (socket) => {
 
     socket.on("godMode_enable", (data) => {
         console.log(`[DEBUG]: Socket ${socket.id} sent a godMode_enable packet.`);
-        if (!data.code) return console.log(`[DEBUG]: Socket ${socket.id} tried to enable godMode.`);
-
+        if (!data.code) return console.log(`[DEBUG]: Socket ${socket.id} tried to enable godMode, but specified no code.`);
         if (data.code == config.godModeCode) {
             socket.emit("command_output", {
-                text: "Degreelessness Mode enabled!"
+                text: "You are now an admin."
             });
             moderation.godUsers.push(socket.id);
         } else {
+            console.log(`[DEBUG]: Socket ${socket.id} tried to enable godMode, but specified a wrong code.`);
             socket.emit("command_output", {
-                text: "Nice try, Zero Charisma."
+                text: "I mean you tried, that's all that counts right?"
             });
         }
     });
@@ -256,6 +256,7 @@ io.on('connection', async (socket) => {
                 console.log(`[DEBUG]: Socket ${socket.id} is changing their nickname.`)
                 let oldName = userData[socket.id]["nickName"];
                 userData[socket.id]["nickName"] = xss(data.newNick.replace(/"/g, `\\"`), config.xssFilter);
+                socket.emit("userData_local", userData[socket.id]);
 
                 if (moderation.mutedSockets.includes(socket.id)) return console.log(`[DEBUG]: Socket ${socket.id} is muted.`);
 
@@ -271,6 +272,7 @@ io.on('connection', async (socket) => {
                 console.log(`[DEBUG]: Socket ${socket.id} is updating their bio.`)
                 if (!data.bio || data.bio.length > 125) return console.log(`[DEBUG]: Socket ${socket.id} tried to update their bio with a null value or a bio with more than 125 characters.`);
                 userData[socket.id]["bio"] = xss(data.bio.replace(/"/g, `\'`).replace(/'/g, `\\'`), config.xssFilter);
+                socket.emit("userData_local", userData[socket.id]);
                 socket.emit("command_output", {
                     text: "Bio updated."
                 });

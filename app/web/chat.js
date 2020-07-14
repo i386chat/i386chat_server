@@ -1,4 +1,14 @@
 "use strict";
+$(document).ready(function() {
+    document.ontouchmove = function(e){
+         e.preventDefault();
+         }
+});
+
+input.onfocus = function () {
+    window.scrollTo(0, 0);
+    document.body.scrollTop = 0;
+}
 
 function arrayRemove(arr, value) {
     return arr.filter(function (ele) {

@@ -1,14 +1,9 @@
 "use strict";
-$(document).ready(function() {
-    document.ontouchmove = function(e){
-         e.preventDefault();
-         }
-});
 
-document.querySelector("input").onfocus = function () {
-    window.scrollTo(0, 0);
-    document.body.scrollTop = 0;
+document.ontouchmove = function(e){
+    e.preventDefault();
 }
+
 
 function arrayRemove(arr, value) {
     return arr.filter(function (ele) {
@@ -63,6 +58,10 @@ $(() => {
         let extraData = ``;
         if (data.userData.admin == true) extraData += `<img src="admin-shield.svg" class="admin" />`
         $("#messages").append($(`<li><span ${onclick_text} style="color:#${data.userData.colour}">${data.userData.nickName} ${extraData}</span> >> ${data.content}</li>`));
+        scrollToBottom();
+    });
+
+    $('#m').on('input', function() {
         scrollToBottom();
     });
 

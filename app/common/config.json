@@ -12,6 +12,6 @@
             "sup": []
         }
     },
-    "godModeCode": "test",
-    "port": 3000
+    "godModeCode": "",
+    "port": 3096
 }

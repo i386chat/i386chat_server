@@ -19,24 +19,35 @@ const express = require("express"),
 let onlineUsers = 0;
 let userData = {
     "userID_to_socketID": {
-
+        nickName: "SYSTEM",
+        userID: 1
     }
 };
 let rooms = ["general"];
 let messageDelay = new Set();
 let privateMessageDelay = new Set();
+let moderation = {
+    godUsers: [],
+    bannedIPs: [],
+    mutedSockets: []
+}
 
 // Express. It should hopefully work fine.
 app.use("/", express.static('./app/web/'));
 
 io.on('connection', async (socket) => {
     console.log(`[DEBUG]: Socket ${socket.id} connected.`)
+    if (moderation.bannedIPs.includes(socket.request.connection.remoteAddress)) {
+        console.log(`[DEBUG]: Socket ${socket.id} is banned.`)
+        socket.disconnect();
+        return;
+    }
     socket.join("general")
     socket.emit("user_connection", {
         onlineUsers
     });
 
-    
+
     socket.on('disconnect', (data) => {
         console.log(`[DEBUG]: Socket ${socket.id} disconnected.`);
         if (!userData[socket.id]) return console.log(`[DEBUG]: Socket ${socket.id} had no userData.`);
@@ -60,6 +71,8 @@ io.on('connection', async (socket) => {
         if (data["content"].length > 250) return console.log(`[DEBUG]: Socket ${socket.id} tried to send a message with more than 250 characters.`);
         data["content"] = xss(data["content"], config.xssFilter);
 
+        if (moderation.mutedSockets.includes(socket.id)) return console.log(`[DEBUG]: Socket ${socket.id} tried to send a message, but is muted.`);
+
         messageDelay.add(socket.id);
 
         io.to(userData[socket.id].currentRoom).emit("chat_message", data);
@@ -79,9 +92,11 @@ io.on('connection', async (socket) => {
         if (data["content"].length > 250) return console.log(`[DEBUG]: Socket ${socket.id} tried to send a message with more than 250 characters.`);
         data["content"] = xss(data["content"], config.xssFilter);
 
-        if(!data["receiverID"]) return console.log(`[DEBUG]: Socket ${socket.id} tried to send a private message, but specified no receiverID parameter.`);
-        privateMessageDelay.add(socket.id);
+        if (!data["receiverID"]) return console.log(`[DEBUG]: Socket ${socket.id} tried to send a private message, but specified no receiverID parameter.`);
 
+        if (moderation.mutedSockets.includes(socket.id)) return console.log(`[DEBUG]: Socket ${socket.id} tried to send a private message, but is muted.`);
+
+        privateMessageDelay.add(socket.id);
         io.to(userData["userID_to_socketID"][data["receiverID"]]).emit("chat_private_message", data);
         setTimeout(() => {
             privateMessageDelay.delete(socket.id);
@@ -93,26 +108,124 @@ io.on('connection', async (socket) => {
         let command = data.command || "";
         switch (command) {
             case "listOnlineUsers":
-                 console.log(`[DEBUG]: Socket ${socket.id} wanted to know the online users.`);
+                console.log(`[DEBUG]: Socket ${socket.id} wanted to know the online users.`);
                 var res = [];
                 for (var i in userData)
                     res.push(userData[i].nickName + ` (${userData[i].userID})`);
                 socket.emit("command_output", {
                     text: `All currently online users: ${res.join(", ")}.`
                 });
-            break;
+                break;
             case "listAllRooms":
                 console.log(`[DEBUG]: Socket ${socket.id} wanted to know the current rooms.`);
 
                 socket.emit("command_output", {
                     text: `Rooms: ${rooms.join(", ")}.`
                 });
-            break;
+                break;
+            case "kickUser":
+                if (!data.userID) console.log(`[DEBUG]: Socket ${socket.id} sent an invalid kickUser packet.`);
+                if (!data.reason) console.log(`[DEBUG]: Socket ${socket.id} sent an invalid kickUser packet.`);
+                console.log(`[DEBUG]: Socket ${socket.id} is trying to kick socket ${userData["userID_to_socketID"][data.userID]}.`);
+                if (!moderation.godUsers.includes(socket.id)) {
+                    console.log(`[DEBUG]: Socket ${socket.id} is not in godUsers array.`);
+                    socket.emit("command_output", {
+                        text: `You do not have permission to do this command.`
+                    });
+                    return;
+                }
+                if (io.sockets.sockets[userData["userID_to_socketID"][data.userID]]) {
+                    io.to(userData["userID_to_socketID"][data.userID]).emit("command_output", {
+                        text: `You have been kicked for ${data.reason}.`
+                    })
+                    io.sockets.sockets[userData["userID_to_socketID"][data.userID]].disconnect();
+                    socket.emit("command_output", {
+                        text: `Kicked user ${data.userID}.`
+                    });
+                }
+                break;
+            case "banUser":
+                if (!data.userID) console.log(`[DEBUG]: Socket ${socket.id} sent an invalid banUser packet.`);
+                if (!data.reason) console.log(`[DEBUG]: Socket ${socket.id} sent an invalid baNuser packet.`);
+                console.log(`[DEBUG]: Socket ${socket.id} is trying to ban socket ${userData["userID_to_socketID"][data.userID]}.`);
+                if (!moderation.godUsers.includes(socket.id)) {
+                    console.log(`[DEBUG]: Socket ${socket.id} is not in godUsers array.`);
+                    socket.emit("command_output", {
+                        text: `You do not have permission to do this command.`
+                    });
+                    return;
+                }
+                if (io.sockets.sockets[userData["userID_to_socketID"][data.userID]]) {
+                    io.to(userData["userID_to_socketID"][data.userID]).emit("command_output", {
+                        text: `You have been banned for ${data.reason}.`
+                    })
+                    moderation.bannedIPs.push(io.sockets.sockets[userData["userID_to_socketID"][data.userID]].request.connection.remoteAddress);
+                    io.sockets.sockets[userData["userID_to_socketID"][data.userID]].disconnect();
+                    socket.emit("command_output", {
+                        text: `Banned user ${data.userID}.`
+                    });
+                }
+                break;
+            case "muteUser":
+                if (!data.userID) console.log(`[DEBUG]: Socket ${socket.id} sent an invalid muteUser packet.`);
+                if (!data.reason) console.log(`[DEBUG]: Socket ${socket.id} sent an invalid muteUser packet.`);
+
+                console.log(`[DEBUG]: Socket ${socket.id} is trying to mute socket ${userData["userID_to_socketID"][data.userID]}.`);
+                if (!moderation.godUsers.includes(socket.id)) {
+                    console.log(`[DEBUG]: Socket ${socket.id} is not in godUsers array.`);
+                    socket.emit("command_output", {
+                        text: `You do not have permission to do this command.`
+                    });
+                    return;
+                }
+                if (io.sockets.sockets[userData["userID_to_socketID"][data.userID]]) {
+                    io.to(userData["userID_to_socketID"][data.userID]).emit("command_output", {
+                        text: `You have been muted for ${data.reason}.`
+                    })
+                    moderation.mutedSockets.push(userData["userID_to_socketID"][data.userID]);
+                    socket.emit("command_output", {
+                        text: `Muted user ${data.userID}.`
+                    });
+                }
+                break;
+            case "unmuteUser":
+                if (!data.userID) console.log(`[DEBUG]: Socket ${socket.id} sent an invalid unmuteUser packet.`);
+                console.log(`[DEBUG]: Socket ${socket.id} is trying to unmute socket ${userData["userID_to_socketID"][data.userID]}.`);
+                if (!moderation.godUsers.includes(socket.id)) {
+                    console.log(`[DEBUG]: Socket ${socket.id} is not in godUsers array.`);
+                    socket.emit("command_output", {
+                        text: `You do not have permission to do this command.`
+                    });
+                    return;
+                }
+                if (io.sockets.sockets[userData["userID_to_socketID"][data.userID]]) {
+                    moderation.mutedSockets = arrayRemove(moderation.mutedSockets, userData["userID_to_socketID"][data.userID])
+                    socket.emit("command_output", {
+                        text: `Unmuted user ${data.userID}.`
+                    });
+                }
+                break;
             default:
                 socket.emit("command_output", {
                     text: `Is someone tinkering in the console?`
                 });
-            break;
+                break;
+        }
+    });
+
+    socket.on("godMode_enable", (data) => {
+        console.log(`[DEBUG]: Socket ${socket.id} sent a godMode_enable packet.`);
+        if (!data.code) return console.log(`[DEBUG]: Socket ${socket.id} tried to enable godMode.`);
+
+        if (data.code == config.godModeCode) {
+            socket.emit("command_output", {
+                text: "Degreelessness Mode enabled!"
+            });
+            moderation.godUsers.push(socket.id);
+        } else {
+            socket.emit("command_output", {
+                text: "Nice try, Zero Charisma."
+            });
         }
     });
 
@@ -125,6 +238,9 @@ io.on('connection', async (socket) => {
                 console.log(`[DEBUG]: Socket ${socket.id} is changing their nickname.`)
                 let oldName = userData[socket.id]["nickName"];
                 userData[socket.id]["nickName"] = xss(data.newNick.replace(/"/g, `\\"`), config.xssFilter);
+
+                if (moderation.mutedSockets.includes(socket.id)) return console.log(`[DEBUG]: Socket ${socket.id} is muted.`);
+
                 io.to(userData[socket.id].currentRoom).emit("user_update", {
                     type: "nickChange",
                     oldName,
@@ -144,7 +260,10 @@ io.on('connection', async (socket) => {
 
             case "room":
                 console.log(`[DEBUG]: Socket ${socket.id} is moving rooms.`)
+                if (moderation.mutedSockets.includes(socket.id)) return console.log(`[DEBUG]: Socket ${socket.id} is muted and can't move rooms.`);
+
                 if (!rooms.includes(data.newRoom)) rooms.push(data.newRoom);
+
                 let oldRoom = userData[socket.id].currentRoom;
                 socket.leave(oldRoom);
                 io.to(oldRoom).emit("user_update", {

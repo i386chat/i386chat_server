@@ -6,6 +6,6 @@ i386chat_server refactor branch.
 - [x] PMs  
 - [x] Nickname and Bio changes  
 - [x] Rooms  
-- [ ] Moderation commands  
+- [x] Moderation commands  
 - [ ] Text formatting  
 - [x] User ignoring   

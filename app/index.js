@@ -17,7 +17,11 @@ const express = require("express"),
 
 // Constants
 let onlineUsers = 0;
-let userData = {};
+let userData = {
+    "userID_to_socketID": {
+
+    }
+};
 let rooms = ["general"];
 let messageDelay = new Set();
 let privateMessageDelay = new Set();
@@ -32,6 +36,7 @@ io.on('connection', async (socket) => {
         onlineUsers
     });
 
+    
     socket.on('disconnect', (data) => {
         console.log(`[DEBUG]: Socket ${socket.id} disconnected.`);
         if (!userData[socket.id]) return console.log(`[DEBUG]: Socket ${socket.id} had no userData.`);
@@ -62,6 +67,26 @@ io.on('connection', async (socket) => {
             messageDelay.delete(socket.id);
         }, 250);
     });
+
+    socket.on('chat_private_message', (data) => {
+        console.log(`[DEBUG]: Socket ${socket.id} sent a chat_private_message packet.`);
+        if (privateMessageDelay.has(socket.id)) {
+            return console.log(`[DEBUG]: Socket ${socket.id} is in the privateMessageDelay list. Message ignored.`);
+        }
+
+        if (!userData[socket.id]) return console.log(`[DEBUG]: Socket ${socket.id} hasn't had their userData initialised and they're trying to send messages!`);
+        data["userData"] = userData[socket.id];
+        if (data["content"].length > 250) return console.log(`[DEBUG]: Socket ${socket.id} tried to send a message with more than 250 characters.`);
+        data["content"] = xss(data["content"], config.xssFilter);
+
+        if(!data["receiverID"]) return console.log(`[DEBUG]: Socket ${socket.id} tried to send a private message, but specified no receiverID parameter.`);
+        privateMessageDelay.add(socket.id);
+
+        io.to(userData["userID_to_socketID"][data["receiverID"]]).emit("chat_private_message", data);
+        setTimeout(() => {
+            privateMessageDelay.delete(socket.id);
+        }, 250);
+    })
 
     socket.on('user_command', (data) => {
         console.log(`[DEBUG]: Socket ${socket.id} sent a user_command packet.`);
@@ -156,6 +181,8 @@ io.on('connection', async (socket) => {
             "userID": Math.floor(Math.random() * 9000000000) + 1000000000,
             "currentRoom": "general"
         };
+
+        userData["userID_to_socketID"][userData[socket.id].userID] = socket.id;
 
         io.to(userData[socket.id].currentRoom).emit("user_update", {
             user: userData[socket.id],

@@ -39,6 +39,13 @@ socket.on('chat_message', (data) => {
     $("#messages").append($(`<li><span ${onclick_text} style="color:#${data.userData.colour}">${data.userData.nickName}</span> >> ${data.content}</li>`));
 });
 
+socket.on('chat_private_message', (data) => {
+    if(clientData.ignored.includes(`${data.userData.userID}`)) return;
+    clientData.lastPM = data.userData.userID;
+    let onclick_text = `onclick="append('ID: ${data.userData.userID} - ${data.userData.bio}')"`
+    $("#messages").append($(`<li><span ${onclick_text} style="color:#${data.userData.colour}">${data.userData.nickName} (PM)</span> >> ${data.content}</li>`));
+});
+
 socket.on('command_output', (data) => {
     append(data.text);
 });
@@ -138,7 +145,32 @@ $('form').submit((event) => {
             });
         break;
         case "//help":
-            append(`Available commands: //online, //room, //nick, //bio, //ignore.`);
+            append(`Available commands: //online, //room, //nick, //bio, //ignore, //whisper, //reply.`);
+        break;
+        case "//whisper":
+            if(!args[0] || args[0].trim() == "") return append("Usage: //whisper <user ID> <message: char max 250>");
+            if(!args[1] || args[1].trim() == "") return append("Usage: //whisper <user ID> <message: char max 250>");
+            if(args.slice(1).join(" ").length > 250) return append("Usage: //whisper <user ID> <message: char max 250>");
+           
+            socket.emit("chat_private_message", {
+                content: args.slice(1).join(" "),
+                userData, 
+                receiverID: args[0]
+            });
+
+            append(`Sent "${args.slice(1).join(" ")}" to user ID: ${args[0]}.`)
+        break;
+        case "//reply":
+            if(!args[0] || args[0].trim() == "") return append("Usage: //reply <message: char max 250>");
+            if(args.join(" ").length > 250) return append("Usage: //reply <message: char max 250>");
+           
+            socket.emit("chat_private_message", {
+                content: args.join(" "),
+                userData, 
+                receiverID: clientData.lastPM
+            });
+
+            append(`Replied "${args.join(" ")}" to user ID: ${clientData.lastPM}.`)
         break;
     }
 

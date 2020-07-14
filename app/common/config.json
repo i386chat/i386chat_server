@@ -3,7 +3,13 @@
         "whiteList": {
             "strong": [],
             "i": [],
-            "span": []
+            "span": [],
+            "u": [],
+            "small": [],
+            "mark": [],
+            "del": [],
+            "sub": [],
+            "sup": []
         }
     },
     "godModeCode": "test",

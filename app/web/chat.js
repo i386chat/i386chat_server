@@ -1,4 +1,19 @@
 "use strict";
+
+function arrayRemove(arr, value) {
+    return arr.filter(function (ele) {
+        return ele != value;
+    });
+}
+
+function scrollToBottom() {
+    $(document).scrollTop($(document).height());
+}
+
+function append(data) {
+    $("#messages").append($(`<li>`).text(data));
+    scrollToBottom();
+}
 $(() => {
     let userData = {};
     let clientData = {
@@ -8,20 +23,6 @@ $(() => {
         connected: true
     }
 
-    function arrayRemove(arr, value) {
-        return arr.filter(function (ele) {
-            return ele != value;
-        });
-    }
-
-    function scrollToBottom() {
-        $(document).scrollTop($(document).height());
-    }
-
-    function append(data) {
-        $("#messages").append($(`<li>`).text(data));
-        scrollToBottom();
-    }
 
     const socket = io({
         reconnect: false

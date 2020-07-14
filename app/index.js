@@ -29,6 +29,7 @@ let privateMessageDelay = new Set();
 let moderation = {
     godUsers: [],
     bannedIPs: [],
+    banReasons: {},
     mutedSockets: []
 }
 
@@ -36,13 +37,21 @@ let moderation = {
 app.use("/", express.static('./app/web/'));
 
 io.on('connection', async (socket) => {
-    console.log(`[DEBUG]: Socket ${socket.id} connected.`)
+    console.log(`[DEBUG]: Socket ${socket.id} connected.`);
+
     if (moderation.bannedIPs.includes(socket.request.connection.remoteAddress)) {
-        console.log(`[DEBUG]: Socket ${socket.id} is banned.`)
+        console.log(`[DEBUG]: Socket ${socket.id} is banned.`);
+        socket.join("general");
+        socket.emit("user_connection", {
+            banned: true,
+            reason: moderation.banReasons[socket.request.connection.remoteAddress],
+            onlineUsers
+        });
         socket.disconnect();
         return;
     }
-    socket.join("general")
+
+    socket.join("general");
     socket.emit("user_connection", {
         onlineUsers
     });
@@ -51,11 +60,16 @@ io.on('connection', async (socket) => {
     socket.on('disconnect', (data) => {
         console.log(`[DEBUG]: Socket ${socket.id} disconnected.`);
         if (!userData[socket.id]) return console.log(`[DEBUG]: Socket ${socket.id} had no userData.`);
+        if(moderation.godUsers.includes(socket.id)) userData[socket.id]["admin"] = true; else userData[socket.id]["admin"] = false; 
+
         io.to(userData[socket.id].currentRoom).emit("user_update", {
             user: userData[socket.id],
             type: "leave"
         });
         delete userData[socket.id];
+        delete moderation.godUsers[socket.id];
+        delete moderation.mutedSockets[socket.id];
+
         if (messageDelay.has(socket.id)) messageDelay.delete(socket.id);
         onlineUsers -= 1;
     });
@@ -70,6 +84,7 @@ io.on('connection', async (socket) => {
         data["userData"] = userData[socket.id];
         if (data["content"].length > 250) return console.log(`[DEBUG]: Socket ${socket.id} tried to send a message with more than 250 characters.`);
         data["content"] = xss(data["content"], config.xssFilter);
+        if(moderation.godUsers.includes(socket.id)) data["userData"]["admin"] = true; else data["userData"]["admin"] = false; 
 
         if (moderation.mutedSockets.includes(socket.id)) return console.log(`[DEBUG]: Socket ${socket.id} tried to send a message, but is muted.`);
 
@@ -89,6 +104,8 @@ io.on('connection', async (socket) => {
 
         if (!userData[socket.id]) return console.log(`[DEBUG]: Socket ${socket.id} hasn't had their userData initialised and they're trying to send messages!`);
         data["userData"] = userData[socket.id];
+        if(moderation.godUsers.includes(socket.id)) data["userData"]["admin"] = true; else data["userData"]["admin"] = false; 
+
         if (data["content"].length > 250) return console.log(`[DEBUG]: Socket ${socket.id} tried to send a message with more than 250 characters.`);
         data["content"] = xss(data["content"], config.xssFilter);
 
@@ -146,7 +163,7 @@ io.on('connection', async (socket) => {
                 break;
             case "banUser":
                 if (!data.userID) console.log(`[DEBUG]: Socket ${socket.id} sent an invalid banUser packet.`);
-                if (!data.reason) console.log(`[DEBUG]: Socket ${socket.id} sent an invalid baNuser packet.`);
+                if (!data.reason) console.log(`[DEBUG]: Socket ${socket.id} sent an invalid banUser packet.`);
                 console.log(`[DEBUG]: Socket ${socket.id} is trying to ban socket ${userData["userID_to_socketID"][data.userID]}.`);
                 if (!moderation.godUsers.includes(socket.id)) {
                     console.log(`[DEBUG]: Socket ${socket.id} is not in godUsers array.`);
@@ -157,8 +174,9 @@ io.on('connection', async (socket) => {
                 }
                 if (io.sockets.sockets[userData["userID_to_socketID"][data.userID]]) {
                     io.to(userData["userID_to_socketID"][data.userID]).emit("command_output", {
-                        text: `You have been banned for ${data.reason}.`
+                        text: `You have been banned for reason: ${data.reason}.`
                     })
+                    moderation.banReasons[io.sockets.sockets[userData["userID_to_socketID"][data.userID]].request.connection.remoteAddress] = data.reason;
                     moderation.bannedIPs.push(io.sockets.sockets[userData["userID_to_socketID"][data.userID]].request.connection.remoteAddress);
                     io.sockets.sockets[userData["userID_to_socketID"][data.userID]].disconnect();
                     socket.emit("command_output", {
@@ -302,6 +320,7 @@ io.on('connection', async (socket) => {
         };
 
         userData["userID_to_socketID"][userData[socket.id].userID] = socket.id;
+        if(moderation.godUsers.includes(socket.id)) userData[socket.id]["admin"] = true; else userData[socket.id]["admin"] = false; 
 
         io.to(userData[socket.id].currentRoom).emit("user_update", {
             user: userData[socket.id],

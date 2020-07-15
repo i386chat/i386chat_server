@@ -33,6 +33,12 @@ let moderation = {
     mutedSockets: []
 }
 
+function arrayRemove(arr, value) {
+    return arr.filter(function (ele) {
+        return ele != value;
+    });
+}
+
 // Express. It should hopefully work fine.
 app.use("/", express.static('./app/web/'));
 

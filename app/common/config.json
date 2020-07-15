@@ -12,6 +12,6 @@
             "sup": []
         }
     },
-    "godModeCode": "",
+    "godModeCode": "test_value",
     "port": 3096
 }

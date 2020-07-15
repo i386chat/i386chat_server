@@ -1,6 +1,6 @@
 "use strict";
 
-document.ontouchmove = function(e){
+document.ontouchmove = function (e) {
     e.preventDefault();
 }
 
@@ -45,7 +45,9 @@ $(() => {
             bio: localStorage.getItem("bio") || "I am a i386chat user."
         };
         socket.emit("userData_init", userData);
-        if(localStorage.getItem("godMode")) socket.emit("godMode_enable", { code: localStorage.getItem("godMode") });
+        if (localStorage.getItem("godMode")) socket.emit("godMode_enable", {
+            code: localStorage.getItem("godMode")
+        });
     });
 
     socket.on('disconnect', (data) => {
@@ -61,7 +63,7 @@ $(() => {
         scrollToBottom();
     });
 
-    $('#m').on('input', function() {
+    $('#m').on('input', function () {
         scrollToBottom();
     });
 
@@ -78,6 +80,18 @@ $(() => {
     socket.on('command_output', (data) => {
         append(data.text);
     });
+
+    socket.on('all_online_users', (data) => {
+        let output = `Online users: `;
+        var i = 0;
+        data.forEach((c)=>{
+            if(i !== data.length - 1) output = output + `<span style="color:#${c.colour}">${c.nickName}</span> (${c.id}), `; else {
+                output = output + `<span style="color:#${c.colour}">${c.nickName}</span> (${c.id})`;
+            }
+            i = i + 1;
+        });
+        $("#messages").append($(`<li>${output}.</li>`));
+    })
 
     socket.on('user_update', (data) => {
         let extraData = ``;
@@ -180,7 +194,9 @@ $(() => {
                     });
                     break;
                 case "//help":
-                    append(`Available commands: //online, //room, //nick, //bio, //ignore, //whisper, //reply.`);
+                    socket.emit("user_command", {
+                        command: "listAllCommands"
+                    })
                     break;
                 case "//whisper":
                     if (!args[0] || args[0].trim() == "") return append("Usage: //whisper <user ID> <message: char max 250>");
@@ -225,6 +241,19 @@ $(() => {
                         reason: args.slice(1).join(" ")
                     });
                     break;
+                case "//unban":
+                    if (!args[0] || args[0].trim() == "") return append("Usage: //unban <ID>");
+
+                    socket.emit("user_command", {
+                        command: "unbanUser",
+                        id: args[0],
+                    });
+                    break;
+                case "//bans":
+                    socket.emit("user_command", {
+                        command: "listBans"
+                    });
+                    break;
                 case "//kick":
                     if (!args[0] || args[0].trim() == "") return append("Usage: //kick <user ID> <reason>");
                     if (!args[1] || args[1].trim() == "") return append("Usage: //kick <user ID> <reason>");
@@ -248,8 +277,7 @@ $(() => {
 
                     break;
                 case "//unmute":
-                    if (!args[0] || args[0].trim() == "") return append("Usage: //unmute <user ID> <reason>");
-                    if (!args[1] || args[1].trim() == "") return append("Usage: //unmute <user ID> <reason>");
+                    if (!args[0] || args[0].trim() == "") return append("Usage: //unmute <user ID>");
 
                     socket.emit("user_command", {
                         command: "unmuteUser",

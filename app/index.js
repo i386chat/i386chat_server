@@ -323,7 +323,7 @@ io.on('connection', async (socket) => {
             case "nickName":
                 console.log(`[DEBUG]: Socket ${socket.id} is changing their nickname.`)
                 let oldName = userData[socket.id]["nickName"];
-                userData[socket.id]["nickName"] = xss(data.newNick.replace(/"/g, `\\"`), config.xssFilter);
+                userData[socket.id]["nickName"] = xss(data.newNick.replace(/"/g, `\\"`), config.nickFilter);
                 socket.emit("userData_local", userData[socket.id]);
 
                 if (moderation.mutedSockets.includes(socket.id)) return console.log(`[DEBUG]: Socket ${socket.id} is muted.`);
@@ -331,7 +331,7 @@ io.on('connection', async (socket) => {
                 io.to(userData[socket.id].currentRoom).emit("user_update", {
                     type: "nickChange",
                     oldName,
-                    newName: xss(data.newNick, config.xssFilter),
+                    newName: xss(data.newNick, config.nickFilter),
                     user: userData[socket.id]
                 });
                 break;
@@ -382,7 +382,7 @@ io.on('connection', async (socket) => {
 
         onlineUsers += 1;
         userData[socket.id] = {
-            "nickName": xss(data["nickName"], config.xssFilter),
+            "nickName": xss(data["nickName"], config.nickFilter),
             "colour": `${Math.floor(Math.random() * 16777216).toString(16)}`,
             "bio": xss(data["bio"].replace(/"/g, `\\"`).replace(/'/g, `\\'`), config.xssFilter),
             "userID": Math.floor(Math.random() * 9000000000) + 1000000000,

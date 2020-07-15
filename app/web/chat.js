@@ -1,10 +1,5 @@
 "use strict";
 
-document.ontouchmove = function (e) {
-    e.preventDefault();
-}
-
-
 function arrayRemove(arr, value) {
     return arr.filter(function (ele) {
         return ele != value;

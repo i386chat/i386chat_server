@@ -41,7 +41,10 @@ function arrayRemove(arr, value) {
     return arr.filter(function (ele) {
         return ele != value;
     });
-}
+};
+function isEmpty(s) {
+    return (s.length === 0 || !s.trim());
+};
 
 // Express. It should hopefully work fine.
 app.use("/", express.static('./app/web/'));
@@ -94,6 +97,7 @@ io.on('connection', async (socket) => {
         if (!userData[socket.id]) return console.log(`[DEBUG]: Socket ${socket.id} hasn't had their userData initialised and they're trying to send messages!`);
         data["userData"] = userData[socket.id];
         if (data["content"].length > 250) return console.log(`[DEBUG]: Socket ${socket.id} tried to send a message with more than 250 characters.`);
+        if(isEmpty(data["content"])) return console.log(`[DEBUG]: Socket ${socket.id} tried to send an empty message.`)
         data["content"] = xss(data["content"], config.xssFilter);
         if (moderation.godUsers.includes(socket.id)) data["userData"]["admin"] = true;
         else data["userData"]["admin"] = false;
@@ -120,6 +124,7 @@ io.on('connection', async (socket) => {
         else data["userData"]["admin"] = false;
 
         if (data["content"].length > 250) return console.log(`[DEBUG]: Socket ${socket.id} tried to send a message with more than 250 characters.`);
+        if(isEmpty(data["content"])) return console.log(`[DEBUG]: Socket ${socket.id} tried to send an empty message.`)
         data["content"] = xss(data["content"], config.xssFilter);
 
         if (!data["receiverID"]) return console.log(`[DEBUG]: Socket ${socket.id} tried to send a private message, but specified no receiverID parameter.`);
@@ -150,9 +155,15 @@ io.on('connection', async (socket) => {
                 break;
             case "listAllRooms":
                 console.log(`[DEBUG]: Socket ${socket.id} wanted to know the current rooms.`);
-
+                let room_output = rooms.map(x => {
+                    if(!x.startsWith("#")) {
+                        return x;
+                    } else {
+                        return "-- hidden --";
+                    }
+                });
                 socket.emit("command_output", {
-                    text: `Rooms: ${rooms.join(", ")}.`
+                    text: `Rooms: ${room_output.join(", ")}.`
                 });
                 break;
             case "listAllCommands":

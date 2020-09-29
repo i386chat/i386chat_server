@@ -4,16 +4,17 @@ function arrayRemove(arr, value) {
     return arr.filter(function (ele) {
         return ele != value;
     });
-}
-
+};
 function scrollToBottom() {
     $(document).scrollTop($(document).height());
-}
-
+};
+function isEmpty(s) {
+    return (s.length === 0 || !s.trim());
+};
 function append(data) {
     $("#messages").append($(`<li>`).text(data));
     scrollToBottom();
-}
+};
 $(() => {
     let userData = {};
     let clientData = {
@@ -54,7 +55,7 @@ $(() => {
         let onclick_text = `onclick="append('ID: ${data.userData.userID} - ${data.userData.bio}')"`
         let extraData = ``;
         if (data.userData.admin == true) extraData += `<img src="admin-shield.svg" class="admin" />`
-        $("#messages").append($(`<li><span ${onclick_text} style="color:#${data.userData.colour}">${data.userData.nickName} ${extraData}</span> >> ${data.content}</li>`));
+        $("#messages").append($(`<li><span ${onclick_text} style="color:#${data.userData.colour}">${data.userData.nickName} ${extraData}</span> >> ${Autolinker.link(data.content, {truncate: {length: 16, location: 'smart'}})}</li>`));
         scrollToBottom();
     });
 
@@ -68,7 +69,7 @@ $(() => {
         let onclick_text = `onclick="append('ID: ${data.userData.userID} - ${data.userData.bio}')"`
         let extraData = ``;
         if (data.userData.admin == true) extraData += `<img src="admin-shield.svg" class="admin" />`
-        $("#messages").append($(`<li><span ${onclick_text} style="color:#${data.userData.colour}">${data.userData.nickName} ${extraData} (PM)</span> >> ${data.content}</li>`));
+        $("#messages").append($(`<li><span ${onclick_text} style="color:#${data.userData.colour}">${data.userData.nickName} ${extraData} (PM)</span> >> ${Autolinker.link(data.content, {truncate: {length: 16, location: 'smart'}})}</li>`));
         scrollToBottom();
     });
 
@@ -120,7 +121,9 @@ $(() => {
 
         event.preventDefault();
         let message = $("#m").val();
-
+        if(isEmpty(message)) {
+            return;
+        }
         if (message.startsWith(`//`)) {
             const args = message.slice("//").trim().split(/ +/g);
             const command = args.shift().toLowerCase();

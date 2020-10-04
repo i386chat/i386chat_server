@@ -1,0 +1,20 @@
+{
+    "xssFilter": {
+        "whiteList": {
+            "strong": [],
+            "i": [],
+            "span": [],
+            "u": [],
+            "small": [],
+            "mark": [],
+            "del": [],
+            "sub": [],
+            "sup": []
+        }
+    },
+    "nickFilter": {
+        "whiteList": {}
+    },
+    "godModeCode": "test_value",
+    "port": 3096
+}

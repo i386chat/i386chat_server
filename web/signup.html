@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html class="has-background-black-bis has-text-white">
+ <head> 
+  <title>i386chat</title> 
+  <meta charset="utf-8" /> 
+  <meta name="viewport" content="width=device-width, initial-scale=1" /> 
+  <link rel="stylesheet" href="../common/bulma.css" /> 
+ </head> 
+ <body class="has-background-black-bis has-text-white"> 
+  <section class="hero is-dark has-background-black is-fullheight"> 
+   <div class="hero-head"> 
+    <nav class="navbar has-background-black-bis has-text-white"> 
+     <div class="container"> 
+      <div class="navbar-brand"> 
+       <a class="navbar-item has-text-white"> <span>i386chat</span> </a> 
+       <span class="navbar-burger burger" data-target="navbarMenuHeroB"> <span></span> <span></span> <span></span> </span> 
+      </div> 
+      <div id="navbarMenuHeroB" class="navbar-menu"> 
+       <div class="navbar-end"> 
+        <a class="navbar-item has-text-white" href="/"> Home </a> 
+        <a class="navbar-item has-text-white" href="/chat.html"> Client </a> 
+        <a class="navbar-item has-text-white is-active" href="/signup.html"> Signup </a> 
+       </div> 
+      </div> 
+     </div> 
+    </nav> 
+   </div> 
+   <div class="hero-body"> 
+    <div class="container has-text-centered has-text-white"> 
+     <h1 class="title has-text-white"> Signup </h1> 
+     <div class="columns is-centered"> 
+      <form action="/signup.html" method="POST">
+        <h1 class="subtitle has-text-white">i386chat does not use passwords for authentication, but instead will just generate a token on account creation to be used in place of a standard login.</h1> 
+
+        <div class="field"> 
+        <div class="control"> 
+         <input class="input" type="text" placeholder="Username" required="" name="userName" /> 
+        </div> 
+       </div> 
+       <div class="field"> 
+        <div class="control"> 
+       <textarea class="textarea" maxlength="250" type="text" placeholder="Bio" required="" name="userBio"></textarea> 
+    </div> 
+    </div> 
+       <div style="margin-top:10px;" class="control"> 
+        <button class="button is-dark" type="submit">Create account</button> 
+       </div> 
+       <div style="margin-top:10px;" class="label has-text-danger"> 
+        <i>Do not share the token that is generated. Keep it safe, this is your method of logging in!</i> 
+       </div> 
+      </form> 
+     </div> 
+    </div> 
+   </div> 
+  </section> 
+  <script>
+document.addEventListener('DOMContentLoaded', () => {
+    const $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
+    if ($navbarBurgers.length > 0) {
+        $navbarBurgers.forEach(el => {
+            el.addEventListener('click', () => {
+                const target = el.dataset.target;
+                const $target = document.getElementById(target);
+                el.classList.toggle('is-active');
+                $target.classList.toggle('is-active');
+
+            });
+        });
+    }
+});
+      </script>  
+ </body>
+</html>
+

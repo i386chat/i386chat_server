@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html class="has-background-black-bis has-text-white">
+ <head> 
+  <title>i386chat</title> 
+  <meta charset="utf-8" /> 
+  <meta name="viewport" content="width=device-width, initial-scale=1" /> 
+  <link rel="stylesheet" href="../common/bulma.css" /> 
+ </head> 
+ <body class="has-background-black-bis has-text-white"> 
+  <section class="hero is-dark has-background-black is-fullheight"> 
+   <div class="hero-head"> 
+    <nav class="navbar has-background-black-bis has-text-white"> 
+     <div class="container"> 
+      <div class="navbar-brand"> 
+       <a class="navbar-item has-text-white"> <span>i386chat</span> </a> 
+       <span class="navbar-burger burger" data-target="navbarMenuHeroB"> <span></span> <span></span> <span></span> </span> 
+      </div> 
+      <div id="navbarMenuHeroB" class="navbar-menu"> 
+       <div class="navbar-end"> 
+        <a class="navbar-item has-text-white is-active" href="/"> Home </a> 
+        <a class="navbar-item has-text-white" href="/chat.html"> Client </a> 
+        <a class="navbar-item has-text-white" href="/signup.html"> Signup </a> 
+       </div> 
+      </div> 
+     </div> 
+    </nav> 
+   </div> 
+   <div class="hero-body"> 
+    <div class="container has-text-centered has-text-white"> 
+     <h1 class="title has-text-white"> i386chat </h1> 
+     <h2 class="subtitle has-text-white"> We're not Discord. </h2> 
+    </div> 
+   </div> 
+  </section> 
+  <script>
+document.addEventListener('DOMContentLoaded', () => {
+    const $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
+    if ($navbarBurgers.length > 0) {
+        $navbarBurgers.forEach(el => {
+            el.addEventListener('click', () => {
+                const target = el.dataset.target;
+                const $target = document.getElementById(target);
+                el.classList.toggle('is-active');
+                $target.classList.toggle('is-active');
+
+            });
+        });
+    }
+});
+      </script>  
+ </body>
+</html>

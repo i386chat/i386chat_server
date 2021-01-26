@@ -10,4 +10,4 @@ i386chat_server refactor branch.
 - [x] Text formatting  
 - [x] User ignoring   
   
-refactor complete!
+token-auth is unstable, and master is atrociously written. If you plan to use i386chat, please use this branch.

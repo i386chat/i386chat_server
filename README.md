@@ -1,5 +1,7 @@
 ![i386 Chat Client Banner](https://github.com/i386chat/i386_chatclient/raw/master/final_banner.png)
   
+Going to rewrite this again soon.  
+  
 i386chat_server refactor branch.  
   
 - [x] Base server   

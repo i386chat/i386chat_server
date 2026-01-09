@@ -4,7 +4,7 @@
   "description": "It's the server powering chat.i386.tech!",
   "main": "server.js",
   "dependencies": {
-    "express": "^4.17.1",
+    "express": "^4.18.2",
     "socket.io": "^2.4.0",
     "xss": "^1.0.7"
   },
